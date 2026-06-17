@@ -17,6 +17,7 @@ This document tracks the end-to-end development journey of the AlertZone admin d
 - **Reports Management Sorting:** Integrated client-side sorting logic to rearrange reports dynamically, sorting by `upvoteCount` descending with a fallback to `createdAt` descending.
 - **Upvotes display badges:** Displayed the upvote count on all report list cards (orange pill badge for upvotes > 0, muted gray badge for 0) and added a dedicated "Community Upvotes" card inside the report detail modal overview grid.
 - **PDF Export & Compile fixes:** Resolved a type-checking error in the PDF auto-table column mapping regarding the `address` lookup.
+- **Contributors Layout:** Removed text truncation from usernames in the Top Contributors leaderboard list to display them fully.
 
 ---
 

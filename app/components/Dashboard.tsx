@@ -467,7 +467,7 @@ function LeaderboardWidget({ data, loading, onNavigate }: { data: LeaderboardIte
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-white group-hover/item:text-teal-400 transition-colors truncate max-w-[100px]" title={item.fullName}>{item.fullName}</p>
+                    <p className="text-xs font-bold text-white group-hover/item:text-teal-400 transition-colors" title={item.fullName}>{item.fullName}</p>
                     <div className="flex items-center gap-1 text-[9px] text-slate-500 mt-0.5 font-semibold">
                       <span className="inline-flex items-center px-1 rounded bg-teal-500/5 text-teal-400/80 border border-teal-500/10 text-[8px] font-black">
                         Lvl {item.level}

@@ -121,6 +121,7 @@
 - [x] Date serialization fix (normalized Firestore Timestamp fields to standard ISO strings to prevent client-side "Invalid Date" errors)
 - [x] Refresh button with loading state
 - [x] Triage sort toggle: added Newest vs Upvotes segmented toggle to the "Reports Needing Action" card, backed by route-level aggregation of top upvoted reports
+- [x] Top Contributors: removed text truncation from usernames in the leaderboard list to display them fully.
 
 ### Admin Login (`Adminlogin.tsx`)
 - [x] Login form — real auth via `/api/auth/login` (username + password)
