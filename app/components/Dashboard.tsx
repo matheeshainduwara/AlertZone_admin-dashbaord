@@ -66,6 +66,7 @@ interface DashboardData {
   statusDistribution: StatusDistributionItem[];
   categorySnapshot: CategorySnapshotItem[];
   recentPending: RecentPendingReport[];
+  mostUpvotedPending: RecentPendingReport[];
   recentActivity: ActivityEntry[];
   leaderboard: LeaderboardItem[];
 }
@@ -466,7 +467,7 @@ function LeaderboardWidget({ data, loading, onNavigate }: { data: LeaderboardIte
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-white group-hover/item:text-teal-400 transition-colors truncate max-w-[100px]" title={item.fullName}>{item.fullName}</p>
+                    <p className="text-xs font-bold text-white group-hover/item:text-teal-400 transition-colors" title={item.fullName}>{item.fullName}</p>
                     <div className="flex items-center gap-1 text-[9px] text-slate-500 mt-0.5 font-semibold">
                       <span className="inline-flex items-center px-1 rounded bg-teal-500/5 text-teal-400/80 border border-teal-500/10 text-[8px] font-black">
                         Lvl {item.level}
@@ -499,6 +500,11 @@ export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) =>
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingSort, setPendingSort] = useState<"newest" | "upvotes">("newest");
+
+  const displayReports = pendingSort === "newest"
+    ? (data?.recentPending ?? [])
+    : (data?.mostUpvotedPending ?? []);
  
   // Poll /api/notifications/recent via Admin SDK to get unread count.
   // We do NOT use onSnapshot here because the admin dashboard uses cookie-based JWT auth,
@@ -704,22 +710,56 @@ export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) =>
 
         {/* Pending Reports Triage */}
         <div className="lg:col-span-7 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col overflow-hidden hover:border-amber-500/20 transition-all duration-300">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 flex-shrink-0">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-white/5 flex-shrink-0 gap-3">
+            <div className="flex-1 min-w-0">
               <h2 className="text-sm font-bold text-white">Reports Needing Action</h2>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                {loading ? "Loading…" : `${data?.recentPending?.length ?? 0} pending reports · Oldest first`}
+                {loading
+                  ? "Loading…"
+                  : `${displayReports.length} pending reports · ${pendingSort === "newest" ? "Newest first" : "Most upvoted"}`
+                }
               </p>
             </div>
-            <button
-              onClick={() => onNavigate("reports")}
-              className="text-xs text-[#4CC2D1] font-bold hover:text-white transition-colors flex items-center gap-1"
-            >
-              View All
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+            
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Sort Toggle */}
+              {!loading && data && (
+                <div className="flex items-center p-0.5 bg-white/5 border border-white/10 rounded-lg select-none">
+                  <button
+                    type="button"
+                    onClick={() => setPendingSort("newest")}
+                    className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                      pendingSort === "newest"
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/20"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Newest
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingSort("upvotes")}
+                    className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                      pendingSort === "upvotes"
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/20"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Upvotes
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => onNavigate("reports")}
+                className="text-xs text-[#4CC2D1] font-bold hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                View All
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="overflow-y-auto flex-1 custom-scrollbar" style={{ maxHeight: 420 }}>
@@ -727,7 +767,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) =>
               <div className="p-5 space-y-3">
                 {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
               </div>
-            ) : !data?.recentPending?.length ? (
+            ) : !displayReports.length ? (
               <div className="flex flex-col items-center justify-center py-16 opacity-60">
                 <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-3">
                   <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -739,7 +779,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) =>
               </div>
             ) : (
               <div className="divide-y divide-white/5">
-                {data.recentPending.map(report => (
+                {displayReports.map(report => (
                   <div key={report.id} className="flex items-start gap-4 px-5 py-4 hover:bg-white/[0.03] transition-colors group">
                     {/* Category Icon */}
                     <div className="flex-shrink-0 mt-0.5 p-2 rounded-xl border border-white/5" style={{ background: `${report.categoryColor}15` }}>

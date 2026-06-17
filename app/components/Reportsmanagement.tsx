@@ -303,7 +303,7 @@ export default function ReportsManagement() {
                 return [
                     report.id || "N/A",
                     report.category || "Unknown",
-                    `${loc.address}, ${loc.lga}, ${loc.district}`,
+                    `${report.location?.address || ""}, ${loc.lga}, ${loc.district}`,
                     report.status,
                     dateTime.date,
                     dateTime.time
@@ -338,6 +338,7 @@ export default function ReportsManagement() {
     const [filterDistrict, setFilterDistrict] = useState<string>("all");
     const [filterLGA, setFilterLGA] = useState<string>("all");
     const [filterAdmin, setFilterAdmin] = useState<string>("all");
+    const [sortBy, setSortBy] = useState<"newest" | "oldest" | "upvotes">("newest");
 
     // Memoized list of unique admins from statusHistory
     const uniqueAdmins = useMemo(() => {
@@ -374,7 +375,7 @@ export default function ReportsManagement() {
         setFilterLGA("all");
     };
 
-    const hasActiveFilters = startDate || endDate || filterCategory !== "all" || filterProvince !== "all" || filterDistrict !== "all" || filterLGA !== "all" || filterAdmin !== "all";
+    const hasActiveFilters = startDate || endDate || filterCategory !== "all" || filterProvince !== "all" || filterDistrict !== "all" || filterLGA !== "all" || filterAdmin !== "all" || sortBy !== "newest";
 
     const clearAllFilters = () => {
         setStartDate("");
@@ -383,6 +384,7 @@ export default function ReportsManagement() {
         setShowEndCalendar(false);
         setFilterCategory("all");
         setFilterAdmin("all");
+        setSortBy("newest");
         if (user && user.scope && user.scope !== "all") {
             if (user.province) setFilterProvince(user.province);
             if (user.scope === "province") {
@@ -482,6 +484,23 @@ export default function ReportsManagement() {
         }
 
         return true;
+    }).sort((a, b) => {
+        if (sortBy === "upvotes") {
+            const upvotesDiff = (b.upvoteCount || 0) - (a.upvoteCount || 0);
+            if (upvotesDiff !== 0) return upvotesDiff;
+            // secondary sort: newest first
+            const aTime = a.createdAt ? new Date(typeof a.createdAt.toDate === 'function' ? a.createdAt.toDate() : a.createdAt).getTime() : 0;
+            const bTime = b.createdAt ? new Date(typeof b.createdAt.toDate === 'function' ? b.createdAt.toDate() : b.createdAt).getTime() : 0;
+            return bTime - aTime;
+        } else if (sortBy === "oldest") {
+            const aTime = a.createdAt ? new Date(typeof a.createdAt.toDate === 'function' ? a.createdAt.toDate() : a.createdAt).getTime() : 0;
+            const bTime = b.createdAt ? new Date(typeof b.createdAt.toDate === 'function' ? b.createdAt.toDate() : b.createdAt).getTime() : 0;
+            return aTime - bTime;
+        } else { // default: newest first
+            const aTime = a.createdAt ? new Date(typeof a.createdAt.toDate === 'function' ? a.createdAt.toDate() : a.createdAt).getTime() : 0;
+            const bTime = b.createdAt ? new Date(typeof b.createdAt.toDate === 'function' ? b.createdAt.toDate() : b.createdAt).getTime() : 0;
+            return bTime - aTime;
+        }
     });
 
     // ─── Update Status Function ───────────────────────────────────────────────
@@ -799,7 +818,27 @@ export default function ReportsManagement() {
             </div>
 
             {/* Filter Grid */}
-            <div className={`relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${showArchive ? 'xl:grid-cols-7' : 'xl:grid-cols-6'} gap-3 p-4 bg-[#0f2233]/40 backdrop-blur-md border border-white/5 rounded-2xl animate-slide-up stagger-1.5`}>
+            <div className={`relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${showArchive ? 'xl:grid-cols-8' : 'xl:grid-cols-7'} gap-3 p-4 bg-[#0f2233]/40 backdrop-blur-md border border-white/5 rounded-2xl animate-slide-up stagger-1.5`}>
+                {/* Sort By Filter */}
+                <div className="relative group flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Sort By</label>
+                    <div className="relative">
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as "newest" | "oldest" | "upvotes")}
+                            className="w-full appearance-none bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/25 transition-all font-semibold cursor-pointer"
+                        >
+                            <option value="newest" className="bg-[#0b1a26] text-slate-300">Newest First</option>
+                            <option value="oldest" className="bg-[#0b1a26] text-slate-300">Oldest First</option>
+                            <option value="upvotes" className="bg-[#0b1a26] text-slate-300">Most Upvoted</option>
+                        </select>
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-teal-400 transition-colors">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
                 {/* Start Date Filter */}
                 <div className="relative group flex flex-col gap-1">
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">From Date</label>
@@ -1068,6 +1107,14 @@ export default function ReportsManagement() {
                                         <div className="space-y-1.5 text-left">
                                             <h3 className="text-sm font-bold text-white flex flex-wrap items-center gap-2">
                                                 <span>{report.category} Incident</span>
+                                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full select-none ${
+                                                    report.upvoteCount > 0 
+                                                        ? "text-orange-300 bg-orange-500/10 border border-orange-500/20" 
+                                                        : "text-slate-500 bg-white/5 border border-white/10"
+                                                }`}>
+                                                    <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l2.5 5.5H20l-4.5 4 1.5 6L12 16.5 7 19.5l1.5-6L4 9.5h5.5L12 4z"/></svg>
+                                                    {report.upvoteCount || 0} {report.upvoteCount === 1 ? "upvote" : "upvotes"}
+                                                </span>
                                                 <span className="text-[10px] font-normal text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1.5">
                                                     <svg className="w-3.5 h-3.5 text-teal-500/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1205,7 +1252,7 @@ export default function ReportsManagement() {
                             {/* Top Grid: Overview + Map */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                         <div className="p-3 bg-white/3 border border-white/5 rounded-xl space-y-1">
                                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Category</p>
                                             <p className="text-sm font-semibold text-slate-200">{selectedReport.category}</p>
@@ -1221,6 +1268,13 @@ export default function ReportsManagement() {
                                                     </>
                                                 );
                                             })()}
+                                        </div>
+                                        <div className="p-3 bg-white/3 border border-white/5 rounded-xl space-y-1">
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Community Upvotes</p>
+                                            <p className="text-sm font-bold text-orange-400 flex items-center gap-1.5 mt-0.5">
+                                                <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l2.5 5.5H20l-4.5 4 1.5 6L12 16.5 7 19.5l1.5-6L4 9.5h5.5L12 4z"/></svg>
+                                                {selectedReport.upvoteCount || 0}
+                                            </p>
                                         </div>
                                     </div>
 

@@ -91,6 +91,7 @@ export interface DashboardPayload {
   statusDistribution: StatusDistributionItem[];
   categorySnapshot: CategorySnapshotItem[];
   recentPending: RecentPendingReport[];
+  mostUpvotedPending: RecentPendingReport[];
   recentActivity: ActivityEntry[];
   leaderboard: LeaderboardItem[];
 }
@@ -167,7 +168,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     const categoryCount: Map<string, number> = new Map();
     const allActivity: ActivityEntry[] = [];
-    const recentPendingReports: RecentPendingReport[] = [];
+    const allPendingReports: RecentPendingReport[] = [];
 
     for (const reportObj of docs) {
       const data = reportObj as any;
@@ -188,8 +189,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       const catId: string = data.categoryId ?? "other";
       categoryCount.set(catId, (categoryCount.get(catId) ?? 0) + 1);
 
-      // Collect recent PENDING reports (up to 8)
-      if (status === "PENDING" && recentPendingReports.length < 8) {
+      // Collect PENDING reports
+      if (status === "PENDING") {
         const loc = data.location ?? {};
         let province = loc.province ?? "";
         let district = loc.district ?? "";
@@ -220,7 +221,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         const catId2 = data.categoryId ?? "other";
         const catMeta = CATEGORY_META[catId2] ?? CATEGORY_META["other"];
 
-        recentPendingReports.push({
+        allPendingReports.push({
           id: reportObj.id,
           category: data.category ?? catMeta.name,
           categoryId: catId2,
@@ -304,11 +305,23 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       .sort((a, b) => b.contributionPoints - a.contributionPoints)
       .slice(0, 5);
 
+    // Slice and sort pending reports for the overview widget
+    const recentPending = allPendingReports.slice(0, 8);
+    const mostUpvotedPending = [...allPendingReports]
+      .sort((a, b) => {
+        if (b.upvoteCount !== a.upvoteCount) {
+          return b.upvoteCount - a.upvoteCount;
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      })
+      .slice(0, 8);
+
     const payload: DashboardPayload = {
       kpis: { total, pending, inProgress, resolved, rejected, totalCitizens, activeCitizens, suspendedCitizens },
       statusDistribution,
       categorySnapshot,
-      recentPending: recentPendingReports,
+      recentPending,
+      mostUpvotedPending,
       recentActivity,
       leaderboard,
     };
