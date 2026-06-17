@@ -4,6 +4,22 @@ This document tracks the end-to-end development journey of the AlertZone admin d
 
 ---
 
+## ✅ Feature: Upvote Sorting and Viewing
+**Date:** 2026-06-17
+**Branch:** `main`
+
+**Objective:** Add sorting and viewing functionality by upvote count to both the Dashboard Overview and Reports Management pages to help admins prioritize highly-reported public incidents.
+
+**What was built / fixed:**
+- **Dashboard API Route (`app/api/dashboard/route.ts`):** Modified report aggregation logic to collect all pending reports and return two separate sliced lists (`recentPending` sorted by date desc and `mostUpvotedPending` sorted by upvotes desc).
+- **Dashboard Overview UI (`app/components/Dashboard.tsx`):** Added a segmented sorting toggle button (Newest vs Upvotes) to the "Reports Needing Action" card. Wired it to switch lists dynamically.
+- **Reports Management Filters (`app/components/Reportsmanagement.tsx`):** Added a "Sort By" select dropdown (Newest First, Oldest First, Most Upvoted) inside the premium filter grid layout.
+- **Reports Management Sorting:** Integrated client-side sorting logic to rearrange reports dynamically, sorting by `upvoteCount` descending with a fallback to `createdAt` descending.
+- **Upvotes display badges:** Displayed the upvote count on all report list cards (orange pill badge for upvotes > 0, muted gray badge for 0) and added a dedicated "Community Upvotes" card inside the report detail modal overview grid.
+- **PDF Export & Compile fixes:** Resolved a type-checking error in the PDF auto-table column mapping regarding the `address` lookup.
+
+---
+
 ## ✅ Fix: MapView Mobile Overlap Bug
 **Date:** 2026-06-09
 **Branch:** `main`

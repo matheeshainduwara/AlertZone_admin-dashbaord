@@ -1,6 +1,6 @@
 # Current Status — AlertZone Admin Dashboard
 
-> **Last Updated:** 2026-06-09 (Fixed mobile MapView overlap bug by applying relative positioning and z-index to sidebar and adding flex gaps to prevent map container from overlaying the sidebar content.)
+> **Last Updated:** 2026-06-17 (Implemented upvote sorting and viewing features in Reports Management and Dashboard overview.)
 >
 > This document tracks what is done, what is broken, and what remains. Agents MUST read this before starting work.
 
@@ -101,6 +101,9 @@
 - [x] Integrated auto-close on click-outside logic and quick-select buttons ("Today", "Clear") directly within the custom calendar popovers.
 - [x] Displays a live count showing `{filteredReports.length} Reports found` directly below the filter grid to dynamically update as the admin interacts with the filters.
 - [x] Replaced old incident category emojis with modern vector SVG icons across all lists and modals
+- [x] Sorting options: added sorting by newest, oldest, and upvotes inside the filter grid
+- [x] Upvotes badge: displayed upvote counts styled inline on each report card
+- [x] Detail modal: added a "Community Upvotes" grid card in the overview layout
 
 ---
 
@@ -117,6 +120,7 @@
 - [x] Live greeting + clock in header (updates every 30 seconds, displays admin's name, and shows geographic view scope badge matching their assigned visibility scope)
 - [x] Date serialization fix (normalized Firestore Timestamp fields to standard ISO strings to prevent client-side "Invalid Date" errors)
 - [x] Refresh button with loading state
+- [x] Triage sort toggle: added Newest vs Upvotes segmented toggle to the "Reports Needing Action" card, backed by route-level aggregation of top upvoted reports
 
 ### Admin Login (`Adminlogin.tsx`)
 - [x] Login form — real auth via `/api/auth/login` (username + password)
