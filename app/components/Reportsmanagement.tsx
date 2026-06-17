@@ -240,6 +240,7 @@ export default function ReportsManagement() {
         previousStatus: ReportStatus;
         message: string;
     } | null>(null);
+    const [fullscreenMedia, setFullscreenMedia] = useState<{ type: 'image' | 'video'; url: string } | null>(null);
 
     // Archive confirmation states
     const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
@@ -1329,8 +1330,17 @@ export default function ReportsManagement() {
                                         <p className="text-xs text-slate-300 leading-relaxed italic">"{selectedReport.description}"</p>
                                         <div className="flex gap-2.5 mt-2 overflow-x-auto pb-1">
                                             {selectedReport.imageUrls?.map((img, i) => (
-                                                <div key={i} className="relative w-32 h-32 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 group/img">
+                                                <div
+                                                    key={i}
+                                                    onClick={() => setFullscreenMedia({ type: 'image', url: img })}
+                                                    className="relative w-32 h-32 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 group/img cursor-pointer"
+                                                >
                                                     <img src={img} alt="Evidence" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                                                        </svg>
+                                                    </div>
                                                 </div>
                                             ))}
                                             {(!selectedReport.imageUrls || selectedReport.imageUrls.length === 0) && (
@@ -1339,14 +1349,27 @@ export default function ReportsManagement() {
                                         </div>
                                         {selectedReport.videoUrl && (
                                             <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
-                                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Video Evidence</p>
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Video Evidence</p>
+                                                    <button
+                                                        onClick={() => setFullscreenMedia({ type: 'video', url: selectedReport.videoUrl })}
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-slate-300 transition-all cursor-pointer hover:scale-[1.02]"
+                                                    >
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                                        </svg>
+                                                        Expand Fullscreen
+                                                    </button>
+                                                </div>
                                                 <div className="relative w-full max-w-md aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/40">
                                                     <video
-                                                        src={selectedReport.videoUrl}
                                                         controls
                                                         className="w-full h-full object-contain"
                                                         preload="metadata"
-                                                    />
+                                                    >
+                                                        <source src={selectedReport.videoUrl} type="video/mp4" />
+                                                        Your browser does not support the video tag.
+                                                    </video>
                                                 </div>
                                             </div>
                                         )}
@@ -1793,6 +1816,39 @@ export default function ReportsManagement() {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Fullscreen Media Modal */}
+            {fullscreenMedia && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
+                    <button
+                        onClick={() => setFullscreenMedia(null)}
+                        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-50 cursor-pointer"
+                        title="Close preview"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <div className="max-w-[95vw] max-h-[90vh] flex items-center justify-center p-4">
+                        {fullscreenMedia.type === 'image' ? (
+                            <img
+                                src={fullscreenMedia.url}
+                                alt="Fullscreen evidence"
+                                className="max-w-full max-h-[85vh] object-contain rounded-lg border border-white/10 shadow-2xl"
+                            />
+                        ) : (
+                            <video
+                                controls
+                                autoPlay
+                                className="max-w-full max-h-[85vh] object-contain rounded-lg border border-white/10 shadow-2xl bg-black"
+                            >
+                                <source src={fullscreenMedia.url} type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                        )}
                     </div>
                 </div>
             )}
