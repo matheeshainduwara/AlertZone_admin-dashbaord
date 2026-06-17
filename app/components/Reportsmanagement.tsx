@@ -1337,6 +1337,19 @@ export default function ReportsManagement() {
                                                 <div className="text-xs text-slate-500 italic py-2">No images provided.</div>
                                             )}
                                         </div>
+                                        {selectedReport.videoUrl && (
+                                            <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+                                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Video Evidence</p>
+                                                <div className="relative w-full max-w-md aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/40">
+                                                    <video
+                                                        src={selectedReport.videoUrl}
+                                                        controls
+                                                        className="w-full h-full object-contain"
+                                                        preload="metadata"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
